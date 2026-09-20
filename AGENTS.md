@@ -307,6 +307,14 @@ After implementing important code, explain:
 
 Codex is responsible for clean Git operation after approved work is complete.
 
+Branching workflow:
+
+- Keep `main` as the stable primary branch.
+- Keep a long-lived `development` branch for integrating completed work; do not make direct feature edits on `development`.
+- Create each feature branch from the current `development` branch.
+- Merge a feature branch back into `development` only after the feature is understood, stable, reviewed as appropriate, and verified.
+- Keep `development` untouched except for reviewed merges from stable feature branches and necessary maintenance updates.
+
 Before editing:
 
 1. Run `git status --short --branch`.
