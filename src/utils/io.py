@@ -7,7 +7,7 @@ import pandas as pd
 
 def load_raw_data(path: str | Path) -> pd.DataFrame:
     """Load a record-oriented raw JSON file into a DataFrame."""
-    return pd.read_json(Path(path), orient="records")
+    return pd.read_json(Path(path), orient="records", convert_dates=False)
 
 
 def save_raw_dataframe(df: pd.DataFrame, path: str | Path) -> None:

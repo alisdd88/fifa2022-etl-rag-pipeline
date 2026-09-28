@@ -3,6 +3,7 @@
 import pandas as pd
 
 from config.settings import PROCESSED_DATA_DIR, RAW_DATA_DIR
+from src.preprocessing.preprocessing_helpers import process_events
 from src.utils.io import load_raw_data
 
 
@@ -123,11 +124,131 @@ def transform_matches(raw_matches: pd.DataFrame) -> None:
     matches.to_csv(statsbomb_processed_dir / "match.csv", index=False)
 
 
+def transform_events(raw_events: pd.DataFrame) -> None:
+    """Transform raw StatsBomb events into normalized key-event actions."""
+    statsbomb_processed_dir = PROCESSED_DATA_DIR / "statsbomb"
+    statsbomb_processed_dir.mkdir(parents=True, exist_ok=True)
+
+    events_columns = [
+        "match_id",
+        "id",
+        "index",
+        "period",
+        "minute",
+        "second",
+        "timestamp",
+        "duration",
+        "type",
+        "player_id",
+        "team_id",
+        "team",
+        "player",
+        "foul_committed_penalty",
+        "foul_committed_offensive",
+        "foul_committed_type",
+        "foul_committed_advantage",
+        "bad_behaviour_card",
+        "foul_committed_card",
+        "shot_outcome",
+        "shot_saved_to_post",
+        "shot_type",
+        "substitution_replacement",
+        "substitution_replacement_id",
+        "substitution_outcome",
+        "substitution_outcome_id",
+    ]
+
+    # Step 1: Validate and select columns without modifying the raw DataFrame.
+    missing_columns = set(events_columns).difference(raw_events.columns)
+    if missing_columns:
+        raise ValueError(f"Raw events are missing columns: {sorted(missing_columns)}")
+
+    events = raw_events[events_columns].copy()
+    events = events.rename(
+        columns={
+            "match_id": "statsbomb_match_id",
+            "id": "statsbomb_event_id",
+            "index": "statsbomb_event_index",
+        }
+    )
+
+    # Step 2: Retain source events that can produce approved key-event actions.
+    source_event_types = [
+        "Foul Committed",
+        "Shot",
+        "Bad Behaviour",
+        "Substitution",
+    ]
+    events = events[events["type"].isin(source_event_types)].copy()
+
+    # Step 3: Link every event to the project's canonical match identifier.
+    matches = pd.read_csv(statsbomb_processed_dir / "match.csv")
+    match_columns = {"statsbomb_match_id", "canonical_id"}
+    missing_match_columns = match_columns.difference(matches.columns)
+    if missing_match_columns:
+        raise ValueError(
+            f"Processed matches are missing columns: {sorted(missing_match_columns)}"
+        )
+
+    match_links = matches[["statsbomb_match_id", "canonical_id"]].rename(
+        columns={"canonical_id": "match_id"}
+    )
+    events = events.merge(
+        match_links,
+        on="statsbomb_match_id",
+        how="left",
+        validate="many_to_one",
+    )
+    if events["match_id"].isnull().any():
+        raise ValueError("Every processed event must link to a project match ID.")
+
+    # Step 4: Create a readable project event identifier.
+    events["event_id"] = (
+        events["match_id"].astype(str)
+        + "_"
+        + events["statsbomb_event_index"].astype(str)
+    )
+    if not events["event_id"].is_unique:
+        raise ValueError("Project event IDs must be unique before event processing.")
+
+    # Step 5: Build goals, cards, and paired substitution actions with metadata.
+    processed_events = process_events(events)
+
+    allowed_event_types = {"card", "goal", "substitution"}
+    unexpected_event_types = set(processed_events["event_type"]) - allowed_event_types
+    if unexpected_event_types:
+        raise ValueError(f"Unexpected event types: {sorted(unexpected_event_types)}")
+
+    mandatory_columns = ["event_id", "match_id", "player_id", "team_id", "event_type"]
+    null_counts = processed_events[mandatory_columns].isnull().sum()
+    if null_counts.any():
+        raise ValueError(
+            f"Mandatory event fields contain nulls: {null_counts[null_counts > 0].to_dict()}"
+        )
+
+    if not processed_events["event_id"].is_unique:
+        raise ValueError("Processed event IDs must be unique.")
+    if (processed_events["period"] <= 0).any():
+        raise ValueError("Event periods must be greater than zero.")
+    if (processed_events["minute"] < 0).any():
+        raise ValueError("Event minutes must not be negative.")
+    if (processed_events["second"] < 0).any():
+        raise ValueError("Event seconds must not be negative.")
+    if processed_events["timestamp"].isnull().any():
+        raise ValueError("Event timestamps must not contain null values.")
+    if (
+        (processed_events["event_type"] == "goal") & (processed_events["period"] == 5)
+    ).any():
+        raise ValueError("Shootout conversions must not be classified as match goals.")
+
+    # Step 6: Save the final event table for inspection and later loading.
+    processed_events.to_csv(
+        statsbomb_processed_dir / "events.csv",
+        index=False,
+    )
+
+
 def transform_lineups(raw_lineups):
-    pass
-
-
-def transform_events(raw_events):
     pass
 
 
