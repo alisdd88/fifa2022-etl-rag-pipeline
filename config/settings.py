@@ -14,7 +14,8 @@ INTERIM_DATA_DIR = DATA_DIR / "interim"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
 METADATA_DIR = DATA_DIR / "metadata"
 DATABASE_URL = os.getenv("DATABASE_URL", "")
+API_KEY = os.getenv("API_KEY", "")
 
-# Limits must be selected after the data-availability audit.
-ARTICLE_LIMIT: int | None = None
+# Limits selected for the curated project scope.
+ARTICLE_LIMIT = 3
 IMAGE_LIMIT: int | None = None
