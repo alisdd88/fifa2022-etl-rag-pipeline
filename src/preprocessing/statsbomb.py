@@ -248,8 +248,120 @@ def transform_events(raw_events: pd.DataFrame) -> None:
     )
 
 
-def transform_lineups(raw_lineups):
-    pass
+def transform_lineups(raw_lineups: pd.DataFrame) -> None:
+    """Transform raw StatsBomb lineups into one player row per match."""
+    statsbomb_processed_dir = PROCESSED_DATA_DIR / "statsbomb"
+    statsbomb_processed_dir.mkdir(parents=True, exist_ok=True)
+
+    lineup_columns = [
+        "player_id",
+        "player_name",
+        "player_nickname",
+        "jersey_number",
+        "country",
+        "match_id",
+        "team",
+    ]
+
+    # Step 1: Select the approved scalar fields and drop nested lineup details.
+    missing_columns = set(lineup_columns).difference(raw_lineups.columns)
+    if missing_columns:
+        raise ValueError(f"Raw lineups are missing columns: {sorted(missing_columns)}")
+
+    lineups = raw_lineups[lineup_columns].copy()
+    lineups = lineups.rename(columns={"match_id": "statsbomb_match_id"})
+
+    mandatory_columns = [
+        "player_id",
+        "player_name",
+        "jersey_number",
+        "country",
+        "statsbomb_match_id",
+        "team",
+    ]
+    null_counts = lineups[mandatory_columns].isnull().sum()
+    if null_counts.any():
+        raise ValueError(
+            "Mandatory lineup fields contain nulls: "
+            f"{null_counts[null_counts > 0].to_dict()}"
+        )
+
+    text_columns = ["player_name", "country", "team"]
+    if (
+        lineups[text_columns]
+        .apply(lambda column: column.str.strip().eq(""))
+        .any()
+        .any()
+    ):
+        raise ValueError("Mandatory lineup text fields must not be blank.")
+    if (lineups["player_id"] <= 0).any():
+        raise ValueError("Lineup player IDs must be greater than zero.")
+    if (lineups["jersey_number"] <= 0).any():
+        raise ValueError("Lineup jersey numbers must be greater than zero.")
+
+    # Step 2: Use the nickname when available and otherwise use the full name.
+    has_nickname = lineups["player_nickname"].notna() & lineups[
+        "player_nickname"
+    ].astype(str).str.strip().ne("")
+    lineups.insert(
+        lineups.columns.get_loc("player_nickname") + 1,
+        "player_display_name",
+        lineups["player_nickname"].where(has_nickname, lineups["player_name"]),
+    )
+
+    # Step 3: Link each source match ID to the project's canonical match ID.
+    matches = pd.read_csv(statsbomb_processed_dir / "match.csv")
+    match_columns = {
+        "canonical_id",
+        "statsbomb_match_id",
+        "home_team",
+        "away_team",
+    }
+    missing_match_columns = match_columns.difference(matches.columns)
+    if missing_match_columns:
+        raise ValueError(
+            f"Processed matches are missing columns: {sorted(missing_match_columns)}"
+        )
+    if not matches["statsbomb_match_id"].is_unique:
+        raise ValueError("Processed StatsBomb match IDs must be unique.")
+
+    lineups = lineups.merge(
+        matches[["canonical_id", "statsbomb_match_id", "home_team", "away_team"]],
+        on="statsbomb_match_id",
+        how="left",
+        validate="many_to_one",
+    )
+    if lineups["canonical_id"].isnull().any():
+        raise ValueError("Every processed lineup must link to a canonical match ID.")
+
+    valid_team = (lineups["team"] == lineups["home_team"]) | (
+        lineups["team"] == lineups["away_team"]
+    )
+    if not valid_team.all():
+        raise ValueError("Every lineup team must belong to its linked match.")
+    lineups = lineups.drop(columns=["home_team", "away_team"])
+
+    # Step 4: Validate one player and jersey assignment per team in each match.
+    if lineups.duplicated(["canonical_id", "player_id"]).any():
+        raise ValueError("A player may appear only once in each processed lineup.")
+    if lineups.duplicated(["canonical_id", "team", "jersey_number"]).any():
+        raise ValueError("Jersey numbers must be unique per match and team.")
+
+    output_columns = [
+        "canonical_id",
+        "statsbomb_match_id",
+        "player_id",
+        "player_name",
+        "player_nickname",
+        "player_display_name",
+        "jersey_number",
+        "country",
+        "team",
+    ]
+    lineups[output_columns].to_csv(
+        statsbomb_processed_dir / "lineups.csv",
+        index=False,
+    )
 
 
 def import_dataframes():
