@@ -88,6 +88,49 @@ class RagPipelineTests(unittest.TestCase):
             top_k=pipeline.RAG_TOP_K,
         )
 
+    def test_answer_query_generates_answer_and_preserves_evidence(self) -> None:
+        """The end-to-end entry point sends its prompt to the local generator."""
+        retrieved_chunks = [
+            {
+                "id": "chunk_1",
+                "content": "Argentina won.",
+                "metadata": {
+                    "article_id": "article_1",
+                    "match_id": "match_1",
+                    "src": "article_1.txt",
+                },
+                "distance": 0.1,
+            }
+        ]
+        prepared_context = {
+            "prompt": "Retrieved evidence and user question",
+            "retrieved_chunks": retrieved_chunks,
+        }
+
+        with (
+            patch.object(
+                pipeline,
+                "prepare_rag_context",
+                return_value=prepared_context,
+            ) as prepare_context,
+            patch.object(
+                pipeline,
+                "generate_response",
+                return_value="Argentina won [Source 1].",
+            ) as generate,
+        ):
+            result = pipeline.answer_query("Who won?", top_k=2)
+
+        prepare_context.assert_called_once_with("Who won?", top_k=2)
+        generate.assert_called_once_with("Retrieved evidence and user question")
+        self.assertEqual(
+            result,
+            {
+                "answer": "Argentina won [Source 1].",
+                "retrieved_chunks": retrieved_chunks,
+            },
+        )
+
     def test_init_pipeline_connects_to_index_manager_and_returns_collection(
         self,
     ) -> None:

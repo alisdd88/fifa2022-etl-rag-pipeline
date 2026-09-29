@@ -1,10 +1,11 @@
-"""Coordinate indexing, retrieval, and prompt construction for RAG."""
+"""Coordinate indexing, retrieval, prompt construction, and generation."""
 
 from typing import TypedDict
 
 import chromadb
 
 from config.settings import RAG_TOP_K
+from src.rag.generation.generator import generate_response
 from src.rag.generation.prompt import build_prompt
 from src.rag.indexing.index_state import ensure_article_index
 from src.rag.retrieval.semantic_retriever import retrieve
@@ -14,6 +15,13 @@ class PreparedRagContext(TypedDict):
     """Prompt and supporting evidence prepared for answer generation."""
 
     prompt: str
+    retrieved_chunks: list[dict[str, object]]
+
+
+class GeneratedRagResponse(TypedDict):
+    """Generated answer and the evidence used to produce it."""
+
+    answer: str
     retrieved_chunks: list[dict[str, object]]
 
 
@@ -34,4 +42,18 @@ def prepare_rag_context(
     return {
         "prompt": prompt,
         "retrieved_chunks": retrieved_chunks,
+    }
+
+
+def answer_query(
+    query: str,
+    top_k: int = RAG_TOP_K,
+) -> GeneratedRagResponse:
+    """Generate an answer for a query and preserve its supporting evidence."""
+    prepared_context = prepare_rag_context(query, top_k=top_k)
+    answer = generate_response(prepared_context["prompt"])
+
+    return {
+        "answer": answer,
+        "retrieved_chunks": prepared_context["retrieved_chunks"],
     }

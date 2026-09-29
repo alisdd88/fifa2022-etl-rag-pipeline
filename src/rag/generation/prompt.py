@@ -1,6 +1,6 @@
 """Build an evidence-grounded prompt from retrieved article chunks."""
 
-from config.settings import RAG_PROMPT_TEMPLATE
+from config.settings import AUGMENTED_PROMPT
 
 NO_CONTEXT_MESSAGE = "No relevant article excerpts were retrieved."
 
@@ -46,7 +46,7 @@ def build_prompt(
 
     context = "\n\n".join(context_parts) if context_parts else NO_CONTEXT_MESSAGE
 
-    return RAG_PROMPT_TEMPLATE.format(
+    return AUGMENTED_PROMPT.format(
         context=context,
         query=query.strip(),
     ).strip()

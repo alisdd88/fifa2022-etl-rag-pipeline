@@ -4,7 +4,7 @@ This repository is being developed as a provenance-aware, match-centered ETL and
 
 ## Current status
 
-The ETL implementation is isolated under `src/etl/`. RAG indexing under `src/rag/` loads processed articles, creates overlapping chunks and MiniLM embeddings, and persists them in a local cosine-distance ChromaDB collection. A content-and-configuration fingerprint prevents unnecessary rebuilding. The RAG pipeline embeds a cleaned query, retrieves the nearest article chunks, and builds an evidence-grounded prompt while preserving its source chunks. Answer generation is not implemented yet.
+The ETL implementation is isolated under `src/etl/`. RAG indexing under `src/rag/` loads processed articles, creates overlapping chunks and MiniLM embeddings, and persists them in a local cosine-distance ChromaDB collection. A content-and-configuration fingerprint prevents unnecessary rebuilding. Given a query, the RAG pipeline retrieves relevant chunks, builds an evidence-grounded prompt, generates an answer with a local Ollama model, and returns the answer with its supporting chunks.
 
 ## Planned ETL flow
 
@@ -34,6 +34,19 @@ prepare_rag_context(query)
     -> ranked top-k article chunks
     -> evidence-grounded prompt + preserved source chunks
 ```
+
+## End-to-end RAG flow
+
+```text
+answer_query(query)
+    -> prepare_rag_context(query)
+    -> retrieve ranked article chunks
+    -> build augmented prompt
+    -> generate_response(prompt) with Ollama
+    -> generated answer + supporting chunks
+```
+
+`answer_query()` is the public entry point that only requires a user query. Ollama must be running locally with the configured model available.
 
 ## Pipeline backlog
 
