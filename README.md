@@ -4,7 +4,7 @@ This repository is being developed as a provenance-aware, match-centered ETL and
 
 ## Current status
 
-The ETL implementation is isolated under `src/etl/`. RAG indexing under `src/rag/` loads processed articles, creates overlapping chunks and MiniLM embeddings, and persists them in a local cosine-distance ChromaDB collection. A content-and-configuration fingerprint prevents unnecessary rebuilding. Given a query, the RAG pipeline retrieves relevant chunks, builds an evidence-grounded prompt, generates an answer with a local Ollama model, and returns the answer with its supporting chunks.
+The ETL implementation is isolated under `src/etl/`. RAG indexing under `src/rag/` loads processed articles, creates overlapping chunks and MiniLM embeddings, and persists them in a local cosine-distance ChromaDB collection. A content-and-configuration fingerprint prevents unnecessary rebuilding. Given a query, the RAG pipeline retrieves relevant chunks, builds an evidence-grounded prompt, generates an answer with a local Ollama model, and returns the answer with its supporting chunks. A Streamlit interface supports new questions and reopens valid stored queries through one shared answer preview.
 
 ## Planned ETL flow
 
@@ -49,13 +49,13 @@ answer_query(query)
 
 `answer_query()` is the public entry point that only requires a user query. Ollama must be running locally with the configured model available. Successful answers are stored as query, answer, sources, and UTC creation time for the UI; failed generations are not recorded.
 
-For a simple command-line query, run:
+To start the local interface, run:
 
 ```text
-python app.py
+streamlit run app.py
 ```
 
-The program asks for one question and prints the generated answer.
+The Ask page sends a question through the RAG pipeline and displays its answer and sources. If `data/history/query_history.json` contains valid records, a History navigation item lists them and opens a selected record in the same answer preview. Empty, invalid, or unreadable history is hidden rather than shown as an empty page.
 
 ## Pipeline backlog
 

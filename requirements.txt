@@ -7,3 +7,4 @@ psycopg[binary]
 python-dotenv
 statsbombpy
 ollama
+streamlit

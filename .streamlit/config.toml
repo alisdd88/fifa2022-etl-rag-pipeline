@@ -1,0 +1,5 @@
+[server]
+# Transformers exposes lazy optional vision modules that Streamlit's source
+# watcher tries to inspect. The app uses text embeddings only, so disable the
+# watcher instead of installing the unrelated torchvision dependency.
+fileWatcherType = "none"
