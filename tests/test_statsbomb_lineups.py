@@ -3,7 +3,7 @@
 import pandas as pd
 import pytest
 
-from src.preprocessing import statsbomb
+from src.etl.preprocessing import statsbomb
 
 
 def write_match_table(processed_dir) -> None:

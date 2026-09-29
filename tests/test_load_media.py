@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from src.db import load_media
+from src.etl.db import load_media
 
 
 def _write_article_metadata(

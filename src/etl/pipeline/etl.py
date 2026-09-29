@@ -1,8 +1,8 @@
 """Top-level ETL orchestration."""
 
-from src.pipeline.extract import extract
-from src.pipeline.load import load
-from src.pipeline.transform import transform
+from src.etl.pipeline.extract import extract
+from src.etl.pipeline.load import load
+from src.etl.pipeline.transform import transform
 
 
 def run_etl() -> None:

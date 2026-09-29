@@ -1,9 +1,9 @@
 """Orchestration for the extraction stage."""
 
 from config.settings import RAW_DATA_DIR
-from src.extraction.articles import extract_articles
-from src.extraction.statsbomb import fetch_statsbomb_data
-from src.utils.io import save_raw_dataframe
+from src.etl.extraction.articles import extract_articles
+from src.etl.extraction.statsbomb import fetch_statsbomb_data
+from src.etl.utils.io import save_raw_dataframe
 
 
 def extract() -> None:

@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from src.pipeline.load import load
+from src.etl.pipeline.load import load
 
 
 def test_load_returns_validated_structured_and_article_counts() -> None:
@@ -16,10 +16,10 @@ def test_load_returns_validated_structured_and_article_counts() -> None:
 
     with (
         patch(
-            "src.pipeline.load.load_structured_data",
+            "src.etl.pipeline.load.load_structured_data",
             return_value=structured_counts,
         ) as structured_loader,
-        patch("src.pipeline.load.insert_article", return_value=8) as article_loader,
+        patch("src.etl.pipeline.load.insert_article", return_value=8) as article_loader,
     ):
         result = load()
 

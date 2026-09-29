@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from src.preprocessing import articles
+from src.etl.preprocessing import articles
 
 
 def guardian_article(source_id: str, title: str) -> dict:

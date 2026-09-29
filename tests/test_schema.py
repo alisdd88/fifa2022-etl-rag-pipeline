@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from src.db.schema import SCHEMA_STATEMENTS, create_schema
+from src.etl.db.schema import SCHEMA_STATEMENTS, create_schema
 
 
 def test_schema_contains_metadata_table_after_matches() -> None:

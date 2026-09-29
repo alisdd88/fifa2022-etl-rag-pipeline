@@ -11,8 +11,8 @@ import psycopg
 from psycopg import sql
 
 from config.settings import PROCESSED_DATA_DIR
-from src.db.db import connect_database
-from src.db.schema import create_schema
+from src.etl.db.db import connect_database
+from src.etl.db.schema import create_schema
 
 STATSBOMB_PROCESSED_DIR = PROCESSED_DATA_DIR / "statsbomb"
 

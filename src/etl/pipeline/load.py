@@ -1,7 +1,7 @@
 """Orchestration for the loading stage."""
 
-from src.db.load_media import insert_article
-from src.db.load_structured import load_structured_data
+from src.etl.db.load_media import insert_article
+from src.etl.db.load_structured import load_structured_data
 
 
 def load() -> dict[str, int]:

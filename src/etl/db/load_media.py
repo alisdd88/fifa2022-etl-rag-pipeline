@@ -6,8 +6,8 @@ from pathlib import Path
 import psycopg
 
 from config.settings import PROCESSED_DATA_DIR, PROJECT_ROOT
-from src.db.db import connect_database
-from src.db.schema import create_schema
+from src.etl.db.db import connect_database
+from src.etl.db.schema import create_schema
 
 ARTICLE_METADATA_DIR = PROCESSED_DATA_DIR / "articles" / "metadata"
 ARTICLE_REQUIRED_KEYS = ("article_id", "match_id", "source", "text_path")

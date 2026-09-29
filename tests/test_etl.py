@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from src.pipeline.etl import run_etl
+from src.etl.pipeline.etl import run_etl
 
 
 def test_run_etl_calls_stages_in_order() -> None:
@@ -11,14 +11,16 @@ def test_run_etl_calls_stages_in_order() -> None:
 
     with (
         patch(
-            "src.pipeline.etl.extract",
+            "src.etl.pipeline.etl.extract",
             side_effect=lambda: stage_calls.append("extract"),
         ),
         patch(
-            "src.pipeline.etl.transform",
+            "src.etl.pipeline.etl.transform",
             side_effect=lambda: stage_calls.append("transform"),
         ),
-        patch("src.pipeline.etl.load", side_effect=lambda: stage_calls.append("load")),
+        patch(
+            "src.etl.pipeline.etl.load", side_effect=lambda: stage_calls.append("load")
+        ),
     ):
         run_etl()
 

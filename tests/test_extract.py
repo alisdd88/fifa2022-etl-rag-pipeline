@@ -2,7 +2,7 @@
 
 from unittest.mock import call, patch
 
-from src.pipeline.extract import extract
+from src.etl.pipeline.extract import extract
 
 
 def test_extract_saves_statsbomb_data_then_extracts_articles() -> None:
@@ -13,11 +13,11 @@ def test_extract_saves_statsbomb_data_then_extracts_articles() -> None:
 
     with (
         patch(
-            "src.pipeline.extract.fetch_statsbomb_data",
+            "src.etl.pipeline.extract.fetch_statsbomb_data",
             return_value=(matches, events, lineups),
         ),
-        patch("src.pipeline.extract.save_raw_dataframe") as save_raw_dataframe,
-        patch("src.pipeline.extract.extract_articles") as extract_articles,
+        patch("src.etl.pipeline.extract.save_raw_dataframe") as save_raw_dataframe,
+        patch("src.etl.pipeline.extract.extract_articles") as extract_articles,
     ):
         extract()
 

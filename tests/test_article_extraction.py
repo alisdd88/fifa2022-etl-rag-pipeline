@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from src.extraction.articles import ARTICLE_LIMIT, MATCH_QUERIES, extract_articles
+from src.etl.extraction.articles import ARTICLE_LIMIT, MATCH_QUERIES, extract_articles
 
 
 def guardian_payload(result_count: int = ARTICLE_LIMIT) -> dict:
@@ -40,7 +40,9 @@ def test_extract_articles_saves_match_linked_results_without_api_key(tmp_path) -
     response.raise_for_status.return_value = None
     response.json.return_value = guardian_payload()
 
-    with patch("src.extraction.articles.requests.get", return_value=response) as get:
+    with patch(
+        "src.etl.extraction.articles.requests.get", return_value=response
+    ) as get:
         output_paths = extract_articles(api_key="secret-key", output_dir=tmp_path)
 
     assert get.call_count == len(MATCH_QUERIES)
@@ -60,7 +62,7 @@ def test_extract_articles_refuses_to_overwrite_raw_file(tmp_path) -> None:
     (tmp_path / f"{first_match_id}_raw_file.json").write_text("{}", encoding="utf-8")
 
     with (
-        patch("src.extraction.articles.requests.get") as get,
+        patch("src.etl.extraction.articles.requests.get") as get,
         pytest.raises(FileExistsError, match="already exist"),
     ):
         extract_articles(api_key="secret-key", output_dir=tmp_path)
@@ -75,7 +77,7 @@ def test_extract_articles_rejects_incomplete_result_set(tmp_path) -> None:
     response.json.return_value = guardian_payload(result_count=2)
 
     with (
-        patch("src.extraction.articles.requests.get", return_value=response),
+        patch("src.etl.extraction.articles.requests.get", return_value=response),
         pytest.raises(ValueError, match="Expected 3"),
     ):
         extract_articles(api_key="secret-key", output_dir=tmp_path)

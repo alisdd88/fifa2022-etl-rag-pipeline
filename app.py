@@ -1,7 +1,7 @@
 """Command-line entry point for the project."""
 
-from src.pipeline.etl import run_etl
-from src.utils.logging import configure_logging
+from src.etl.pipeline.etl import run_etl
+from src.etl.utils.logging import configure_logging
 
 
 def main() -> None:

@@ -4,7 +4,7 @@ This repository is being developed as a provenance-aware, match-centered ETL and
 
 ## Current status
 
-The ETL package structure and entry points are scaffolded. StatsBomb extraction and match, competition, and key-event preprocessing are implemented. Lineup preprocessing, other modalities, the database schema, and loading rules remain intentionally unimplemented until their behavior is agreed.
+The ETL implementation is isolated under `src/etl/`. RAG indexing under `src/rag/` loads processed articles, creates overlapping chunks and MiniLM embeddings, and persists them in a local cosine-distance ChromaDB collection. A content-and-configuration fingerprint prevents unnecessary rebuilding. Semantic retrieval and answer generation are not implemented yet.
 
 ## Planned ETL flow
 
@@ -13,6 +13,15 @@ app.py -> run_etl() -> extract() -> transform() -> load()
 ```
 
 Raw acquisitions belong in `data/raw/`, reproducible intermediate artifacts in `data/interim/`, normalized outputs in `data/processed/`, and provenance manifests in `data/metadata/`.
+
+## RAG indexing flow
+
+```text
+init_pipeline() -> ensure_article_index() -> load -> chunk -> embed
+                -> local cosine ChromaDB collection
+```
+
+The generated Chroma database is stored under `data/processed/chroma/` and is not committed to Git.
 
 ## Pipeline backlog
 

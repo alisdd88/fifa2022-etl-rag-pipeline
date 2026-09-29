@@ -3,8 +3,8 @@
 import pandas as pd
 
 from config.settings import PROCESSED_DATA_DIR, RAW_DATA_DIR
-from src.preprocessing.preprocessing_helpers import process_events
-from src.utils.io import load_raw_data
+from src.etl.preprocessing.preprocessing_helpers import process_events
+from src.etl.utils.io import load_raw_data
 
 
 def normalize_statsbomb() -> None:

@@ -1,4 +1,8 @@
+chromadb
+langchain-text-splitters
+numpy
 pandas
+sentence-transformers
 psycopg[binary]
 python-dotenv
 statsbombpy

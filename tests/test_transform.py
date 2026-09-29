@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from src.pipeline.transform import transform
+from src.etl.pipeline.transform import transform
 
 
 def test_transform_runs_statsbomb_then_article_preprocessing() -> None:
@@ -11,11 +11,11 @@ def test_transform_runs_statsbomb_then_article_preprocessing() -> None:
 
     with (
         patch(
-            "src.pipeline.transform.normalize_statsbomb",
+            "src.etl.pipeline.transform.normalize_statsbomb",
             side_effect=lambda: stage_calls.append("statsbomb"),
         ),
         patch(
-            "src.pipeline.transform.transform_articles",
+            "src.etl.pipeline.transform.transform_articles",
             side_effect=lambda: stage_calls.append("articles"),
         ),
     ):

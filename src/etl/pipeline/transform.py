@@ -1,7 +1,7 @@
 """Orchestration for the transformation stage."""
 
-from src.preprocessing.articles import transform_articles
-from src.preprocessing.statsbomb import normalize_statsbomb
+from src.etl.preprocessing.articles import transform_articles
+from src.etl.preprocessing.statsbomb import normalize_statsbomb
 
 
 def transform() -> None:

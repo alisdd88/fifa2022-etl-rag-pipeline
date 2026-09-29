@@ -12,7 +12,7 @@
 
 ### Extraction
 
-`src/extraction/statsbomb.py` fetches the 2022 FIFA World Cup semi-finals and final from StatsBomb competition `43`, season `106`.
+`src/etl/extraction/statsbomb.py` fetches the 2022 FIFA World Cup semi-finals and final from StatsBomb competition `43`, season `106`.
 
 Raw files:
 
@@ -22,7 +22,7 @@ Raw files:
 
 ### Preprocessing
 
-`src/preprocessing/statsbomb.py` creates:
+`src/etl/preprocessing/statsbomb.py` creates:
 
 - `data/processed/statsbomb/competition.csv` — 1 row
 - `data/processed/statsbomb/match.csv` — 3 rows
@@ -33,7 +33,7 @@ The 84 event rows contain 13 cards, 11 match goals, and 60 paired substitution a
 
 ### PostgreSQL loading
 
-The database is `fifa2022wc`. `src/db/schema.py` and `src/db/load_structured.py` create and load:
+The database is `fifa2022wc`. `src/etl/db/schema.py` and `src/etl/db/load_structured.py` create and load:
 
 - `competition`
 - `matches`
@@ -48,7 +48,7 @@ The StatsBomb database load is complete and working. Do not redesign it while ad
 
 ### Extraction
 
-`src/extraction/articles.py` queries The Guardian Open Platform for three relevance-ranked football results per selected match.
+`src/etl/extraction/articles.py` queries The Guardian Open Platform for three relevance-ranked football results per selected match.
 
 Each match receives one immutable raw file:
 
@@ -58,7 +58,7 @@ data/raw/articles/{match_id}_raw_file.json
 
 Each file stores the canonical match ID, source and retrieval provenance, query metadata, API metadata, and three Guardian article records. The API key is never written to raw data.
 
-`src/pipeline/extract.py` includes `extract_articles()` after StatsBomb extraction.
+`src/etl/pipeline/extract.py` includes `extract_articles()` after StatsBomb extraction.
 
 ### Manual relevance review
 
@@ -78,7 +78,7 @@ The rejected result was a pre-match supporter-response request rather than a use
 
 ### Preprocessing
 
-`src/preprocessing/articles.py` cleans and validates the eight approved articles. `src/pipeline/transform.py` now runs StatsBomb preprocessing followed by article preprocessing.
+`src/etl/preprocessing/articles.py` cleans and validates the eight approved articles. `src/etl/pipeline/transform.py` now runs StatsBomb preprocessing followed by article preprocessing.
 
 Generated article artifacts:
 
@@ -125,9 +125,9 @@ The `match_id` values use the same canonical identifiers as the StatsBomb `match
 
 ### PostgreSQL loading
 
-`src/db/schema.py` creates a shared `metadata` table with a text primary key, a foreign key to `matches(match_id)`, source, media type, content path, and metadata path. Cleaned article bodies remain file-backed rather than being duplicated in PostgreSQL.
+`src/etl/db/schema.py` creates a shared `metadata` table with a text primary key, a foreign key to `matches(match_id)`, source, media type, content path, and metadata path. Cleaned article bodies remain file-backed rather than being duplicated in PostgreSQL.
 
-`src/db/load_media.py` reads all processed article metadata JSON files and maps:
+`src/etl/db/load_media.py` reads all processed article metadata JSON files and maps:
 
 - `article_id` to `metadata_id`;
 - `match_id` to `match_id`;
@@ -136,7 +136,7 @@ The `match_id` values use the same canonical identifiers as the StatsBomb `match
 - `text_path` to `file_path`;
 - each JSON file's project-relative path to `metadata_path`.
 
-The loader validates required source keys, non-empty values, unique article IDs, referenced text files, database row counts, and complete row content. It refreshes article rows in its own transaction. `src/pipeline/load.py` runs structured loading first and article metadata loading second.
+The loader validates required source keys, non-empty values, unique article IDs, referenced text files, database row counts, and complete row content. It refreshes article rows in its own transaction. `src/etl/pipeline/load.py` runs structured loading first and article metadata loading second.
 
 ## Latest verification
 
