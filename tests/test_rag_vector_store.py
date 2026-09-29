@@ -13,6 +13,7 @@ from src.rag.indexing.vector_store import (
     create_local_client,
     delete_collection,
     get_collection_if_exists,
+    search_collection,
 )
 
 TEST_FINGERPRINT = {
@@ -86,6 +87,53 @@ class VectorStoreTests(unittest.TestCase):
             create_collection(client, "test_collection", TEST_FINGERPRINT)
             self.assertTrue(delete_collection(client, "test_collection"))
             self.assertIsNone(get_collection_if_exists(client, "test_collection"))
+
+    def test_search_collection_formats_ranked_chroma_results(self) -> None:
+        """A Chroma query is converted into retrieval result dictionaries."""
+        collection = Mock()
+        collection.query.return_value = {
+            "ids": [["chunk_1", "chunk_2"]],
+            "documents": [["First result.", "Second result."]],
+            "metadatas": [
+                [
+                    {"match_id": "match_1", "src": "article_1.txt"},
+                    {"match_id": "match_2", "src": "article_2.txt"},
+                ]
+            ],
+            "distances": [[0.1, 0.2]],
+        }
+        query_embedding = np.array([0.3, 0.4], dtype=np.float32)
+
+        results = search_collection(collection, query_embedding, top_k=2)
+
+        collection.query.assert_called_once()
+        query_arguments = collection.query.call_args.kwargs
+        np.testing.assert_allclose(
+            query_arguments["query_embeddings"],
+            [[0.3, 0.4]],
+        )
+        self.assertEqual(query_arguments["n_results"], 2)
+        self.assertEqual(
+            query_arguments["include"],
+            ["documents", "metadatas", "distances"],
+        )
+        self.assertEqual(
+            results,
+            [
+                {
+                    "id": "chunk_1",
+                    "content": "First result.",
+                    "metadata": {"match_id": "match_1", "src": "article_1.txt"},
+                    "distance": 0.1,
+                },
+                {
+                    "id": "chunk_2",
+                    "content": "Second result.",
+                    "metadata": {"match_id": "match_2", "src": "article_2.txt"},
+                    "distance": 0.2,
+                },
+            ],
+        )
 
     def test_add_chunks_rejects_misaligned_embeddings(self) -> None:
         """Every chunk must have one embedding row at the same position."""

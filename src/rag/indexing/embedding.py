@@ -24,3 +24,9 @@ def embed_chunks(chunks: list[dict[str, str]]) -> np.ndarray:
 
     vectors = _get_model().encode(chunk_contents, convert_to_numpy=True)
     return np.asarray(vectors)
+
+
+def embed_query(query: str) -> np.ndarray:
+    """Encode one cleaned query into a NumPy embedding vector."""
+    vector = _get_model().encode(query, convert_to_numpy=True)
+    return np.asarray(vector)

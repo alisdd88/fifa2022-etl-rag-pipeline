@@ -6,7 +6,7 @@ import chromadb
 import numpy as np
 from chromadb.errors import NotFoundError
 
-from config.settings import CHROMA_DB_DIR, RAG_DISTANCE_METRIC
+from config.settings import CHROMA_DB_DIR, RAG_DISTANCE_METRIC, RAG_TOP_K
 
 
 def create_local_client(
@@ -50,6 +50,36 @@ def create_collection(
         metadata=fingerprint,
         embedding_function=None,
     )
+
+
+def search_collection(
+    collection: chromadb.Collection, query_embedding: np.ndarray, top_k: int = RAG_TOP_K
+) -> list[dict]:
+    """
+    Searches the collection using a query vector.
+    Returns a clean list of formatted search result dictionaries.
+    """
+    # Perform vector similarity query
+    results = collection.query(
+        query_embeddings=[query_embedding.tolist()],
+        n_results=top_k,
+        include=["documents", "metadatas", "distances"],
+    )
+
+    # Reformat raw Chroma results into a clean list of document records
+    formatted_results = []
+
+    documents = results["documents"][0]
+    ids = results["ids"][0]
+    metadatas = results["metadatas"][0]
+    distances = results["distances"][0]
+
+    for doc_id, doc_text, meta, distance in zip(ids, documents, metadatas, distances):
+        formatted_results.append(
+            {"id": doc_id, "content": doc_text, "metadata": meta, "distance": distance}
+        )
+
+    return formatted_results
 
 
 def add_chunks(
