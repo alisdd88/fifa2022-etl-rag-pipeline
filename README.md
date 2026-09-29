@@ -4,7 +4,7 @@ This repository is being developed as a provenance-aware, match-centered ETL and
 
 ## Current status
 
-The ETL implementation is isolated under `src/etl/`. RAG indexing under `src/rag/` loads processed articles, creates overlapping chunks and MiniLM embeddings, and persists them in a local cosine-distance ChromaDB collection. A content-and-configuration fingerprint prevents unnecessary rebuilding. Semantic retrieval embeds a cleaned query with the same MiniLM model and returns the nearest article chunks. Prompt construction and answer generation are not implemented yet.
+The ETL implementation is isolated under `src/etl/`. RAG indexing under `src/rag/` loads processed articles, creates overlapping chunks and MiniLM embeddings, and persists them in a local cosine-distance ChromaDB collection. A content-and-configuration fingerprint prevents unnecessary rebuilding. The RAG pipeline embeds a cleaned query, retrieves the nearest article chunks, and builds an evidence-grounded prompt while preserving its source chunks. Answer generation is not implemented yet.
 
 ## Planned ETL flow
 
@@ -23,11 +23,16 @@ init_pipeline() -> ensure_article_index() -> load -> chunk -> embed
 
 The generated Chroma database is stored under `data/processed/chroma/` and is not committed to Git.
 
-## RAG retrieval flow
+## RAG retrieval and prompt flow
 
 ```text
-query -> clean and validate -> MiniLM query embedding
-      -> cosine search in ChromaDB -> ranked top-k article chunks
+prepare_rag_context(query)
+    -> ensure article index
+    -> clean and validate query
+    -> MiniLM query embedding
+    -> cosine search in ChromaDB
+    -> ranked top-k article chunks
+    -> evidence-grounded prompt + preserved source chunks
 ```
 
 ## Pipeline backlog
