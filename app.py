@@ -1,13 +1,15 @@
-"""Command-line entry point for the project."""
+"""Command-line entry point for asking one RAG question."""
 
-from src.etl.pipeline.etl import run_etl
 from src.etl.utils.logging import configure_logging
+from src.rag.pipeline import answer_query
 
 
 def main() -> None:
-    """Configure logging and run the ETL pipeline."""
+    """Read one query, run the RAG pipeline, and print its answer."""
     configure_logging()
-    run_etl()
+    query = input("Ask a FIFA World Cup 2022 question: ")
+    result = answer_query(query)
+    print(result["answer"])
 
 
 if __name__ == "__main__":

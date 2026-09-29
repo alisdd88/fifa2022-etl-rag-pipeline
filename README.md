@@ -9,7 +9,7 @@ The ETL implementation is isolated under `src/etl/`. RAG indexing under `src/rag
 ## Planned ETL flow
 
 ```text
-app.py -> run_etl() -> extract() -> transform() -> load()
+run_etl() -> extract() -> transform() -> load()
 ```
 
 Raw acquisitions belong in `data/raw/`, reproducible intermediate artifacts in `data/interim/`, normalized outputs in `data/processed/`, and provenance manifests in `data/metadata/`.
@@ -48,6 +48,14 @@ answer_query(query)
 ```
 
 `answer_query()` is the public entry point that only requires a user query. Ollama must be running locally with the configured model available. Successful answers are stored as query, answer, sources, and UTC creation time for the UI; failed generations are not recorded.
+
+For a simple command-line query, run:
+
+```text
+python app.py
+```
+
+The program asks for one question and prints the generated answer.
 
 ## Pipeline backlog
 
