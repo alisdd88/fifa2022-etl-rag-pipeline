@@ -17,6 +17,7 @@ data/**
 !data/**/.gitkeep
 !data/metadata/README.md
 !data/metadata/manifest.example.json
+!data/metadata/articles/relevant_ids.json
 
 # Local databases and media
 *.db
