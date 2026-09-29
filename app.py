@@ -82,6 +82,13 @@ def render_ask_page() -> None:
 
     with st.form("question_form"):
         query = st.text_input("Ask a question", key="query_input")
+        router = st.radio(
+            "Retrieval method",
+            ("semantic", "structured"),
+            format_func=str.title,
+            horizontal=True,
+            key="retrieval_router",
+        )
         submitted = st.form_submit_button("Get answer")
 
     if submitted:
@@ -89,8 +96,8 @@ def render_ask_page() -> None:
             st.warning("Enter a question before requesting an answer.")
         else:
             try:
-                with st.spinner("Searching the articles and generating an answer..."):
-                    result = answer_query(query.strip())
+                with st.spinner("Retrieving evidence and generating an answer..."):
+                    result = answer_query(query.strip(), router=router)
             # Indexing, model loading, and Ollama can raise different library errors.
             except Exception as error:  # noqa: BLE001
                 st.error(f"The answer could not be generated: {error}")

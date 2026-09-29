@@ -3,6 +3,7 @@ langchain-text-splitters
 numpy
 pandas
 sentence-transformers
+sqlglot
 psycopg[binary]
 python-dotenv
 statsbombpy

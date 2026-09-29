@@ -61,6 +61,7 @@ class AppTests(unittest.TestCase):
         fake_streamlit = MagicMock()
         fake_streamlit.session_state = {}
         fake_streamlit.text_input.return_value = "Who won?"
+        fake_streamlit.radio.return_value = "structured"
         fake_streamlit.form_submit_button.return_value = True
         result = {
             "answer": "Argentina won [Source 1].",
@@ -74,7 +75,14 @@ class AppTests(unittest.TestCase):
         ):
             app.render_ask_page()
 
-        answer_query.assert_called_once_with("Who won?")
+        fake_streamlit.radio.assert_called_once_with(
+            "Retrieval method",
+            ("semantic", "structured"),
+            format_func=str.title,
+            horizontal=True,
+            key="retrieval_router",
+        )
+        answer_query.assert_called_once_with("Who won?", router="structured")
         render_preview.assert_called_once_with(
             {
                 "question": "Who won?",

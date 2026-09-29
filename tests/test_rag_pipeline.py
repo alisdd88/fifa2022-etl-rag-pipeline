@@ -123,7 +123,10 @@ class RagPipelineTests(unittest.TestCase):
             result = pipeline.answer_query("Who won?", top_k=2)
 
         prepare_context.assert_called_once_with("Who won?", top_k=2)
-        generate.assert_called_once_with("Retrieved evidence and user question")
+        generate.assert_called_once_with(
+            "Retrieved evidence and user question",
+            router="semantic",
+        )
         save_history.assert_called_once_with(
             query="Who won?",
             answer="Argentina won [Source 1].",
@@ -136,6 +139,109 @@ class RagPipelineTests(unittest.TestCase):
                 "retrieved_chunks": retrieved_chunks,
             },
         )
+
+    def test_prepare_structured_context_generates_validates_and_executes_sql(
+        self,
+    ) -> None:
+        """Structured preparation follows the approved SQL retrieval stages."""
+        sql_query = "SELECT COUNT(*) AS match_count FROM matches"
+        sql_result = [{"match_count": 3}]
+
+        with (
+            patch.object(pipeline, "generate_sql", return_value=sql_query) as generate,
+            patch.object(pipeline, "validate_sql", return_value=True) as validate,
+            patch.object(pipeline, "execute_sql", return_value=sql_result) as execute,
+        ):
+            result = pipeline.prepare_structured_context("How many matches?")
+
+        generate.assert_called_once_with("How many matches?")
+        validate.assert_called_once_with(sql_query)
+        execute.assert_called_once_with(sql_query)
+        self.assertEqual(
+            result,
+            {"sql_query": sql_query, "sql_result": sql_result},
+        )
+
+    def test_prepare_structured_context_rejects_invalid_generated_sql(self) -> None:
+        """Generated SQL that fails validation never reaches PostgreSQL."""
+        with (
+            patch.object(pipeline, "generate_sql", return_value="DROP TABLE matches"),
+            patch.object(pipeline, "validate_sql", return_value=False),
+            patch.object(pipeline, "execute_sql") as execute,
+            self.assertRaisesRegex(ValueError, "failed read-only validation"),
+        ):
+            pipeline.prepare_structured_context("Delete the matches")
+
+        execute.assert_not_called()
+
+    def test_answer_query_uses_structured_context_and_preserves_evidence(self) -> None:
+        """The structured route passes SQL evidence to answer generation."""
+        sql_query = "SELECT COUNT(*) AS match_count FROM matches"
+        sql_result = [{"match_count": 3}]
+        prepared_context = {
+            "sql_query": sql_query,
+            "sql_result": sql_result,
+        }
+        structured_sources = [
+            {
+                "id": "structured-query",
+                "content": '[{"match_count": 3}]',
+                "metadata": {
+                    "retrieval_type": "structured",
+                    "sql_query": sql_query,
+                },
+            }
+        ]
+
+        with (
+            patch.object(
+                pipeline,
+                "prepare_structured_context",
+                return_value=prepared_context,
+            ) as prepare_context,
+            patch.object(
+                pipeline,
+                "generate_response",
+                return_value="Three matches are stored.",
+            ) as generate,
+            patch.object(pipeline, "save_query_history") as save_history,
+        ):
+            result = pipeline.answer_query(
+                "How many matches?",
+                router="structured",
+            )
+
+        prepare_context.assert_called_once_with("How many matches?")
+        generate.assert_called_once_with(
+            "How many matches?",
+            router="structured",
+            sql_query=sql_query,
+            sql_result=sql_result,
+        )
+        save_history.assert_called_once_with(
+            query="How many matches?",
+            answer="Three matches are stored.",
+            sources=structured_sources,
+        )
+        self.assertEqual(
+            result,
+            {
+                "answer": "Three matches are stored.",
+                "retrieved_chunks": structured_sources,
+            },
+        )
+
+    def test_answer_query_rejects_unknown_router_before_retrieval(self) -> None:
+        """An unsupported manual route does not start either retriever."""
+        with (
+            patch.object(pipeline, "prepare_rag_context") as prepare_semantic,
+            patch.object(pipeline, "prepare_structured_context") as prepare_structured,
+            self.assertRaisesRegex(ValueError, "Router must be either"),
+        ):
+            pipeline.answer_query("Question", router="hybrid")
+
+        prepare_semantic.assert_not_called()
+        prepare_structured.assert_not_called()
 
     def test_answer_query_does_not_save_failed_generation(self) -> None:
         """History remains unchanged when local generation fails."""
