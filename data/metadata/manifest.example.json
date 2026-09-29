@@ -1,0 +1,14 @@
+{
+  "source_id": "article_001",
+  "match_id": "WC22_FINAL_ARG_FRA",
+  "source_url": "https://example.org/article",
+  "publisher": "Example publisher",
+  "author": null,
+  "modality": "article",
+  "retrieved_at": "2025-01-01T00:00:00+00:00",
+  "language": "en",
+  "license": null,
+  "license_url": null,
+  "raw_path": "data/raw/articles/article_001.html",
+  "transformation_history": []
+}

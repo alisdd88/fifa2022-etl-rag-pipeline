@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+.ipynb_checkpoints/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Acquired and generated data
+data/**
+!data/**/
+!data/**/.gitkeep
+!data/metadata/README.md
+!data/metadata/manifest.example.json
+!data/metadata/articles/relevant_ids.json
+
+# Local databases and media
+*.db
+*.sqlite
+*.sqlite3

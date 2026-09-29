@@ -1,0 +1,21 @@
+"""Central project paths and conservative acquisition defaults."""
+
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(PROJECT_ROOT / ".env")
+
+DATA_DIR = PROJECT_ROOT / "data"
+RAW_DATA_DIR = DATA_DIR / "raw"
+INTERIM_DATA_DIR = DATA_DIR / "interim"
+PROCESSED_DATA_DIR = DATA_DIR / "processed"
+METADATA_DIR = DATA_DIR / "metadata"
+DATABASE_URL = os.getenv("DATABASE_URL", "")
+API_KEY = os.getenv("API_KEY", "")
+
+# Limits selected for the curated project scope.
+ARTICLE_LIMIT = 3
+IMAGE_LIMIT: int | None = None
