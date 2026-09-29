@@ -18,6 +18,7 @@ data/**
 !data/metadata/README.md
 !data/metadata/manifest.example.json
 !data/metadata/articles/relevant_ids.json
+!data/history/query_history.json
 
 # Local databases and media
 *.db

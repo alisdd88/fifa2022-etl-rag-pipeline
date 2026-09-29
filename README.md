@@ -43,10 +43,11 @@ answer_query(query)
     -> retrieve ranked article chunks
     -> build augmented prompt
     -> generate_response(prompt) with Ollama
+    -> append successful result to data/history/query_history.json
     -> generated answer + supporting chunks
 ```
 
-`answer_query()` is the public entry point that only requires a user query. Ollama must be running locally with the configured model available.
+`answer_query()` is the public entry point that only requires a user query. Ollama must be running locally with the configured model available. Successful answers are stored as query, answer, sources, and UTC creation time for the UI; failed generations are not recorded.
 
 ## Pipeline backlog
 

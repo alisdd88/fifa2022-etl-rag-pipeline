@@ -14,6 +14,7 @@ INTERIM_DATA_DIR = DATA_DIR / "interim"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
 CHROMA_DB_DIR = PROCESSED_DATA_DIR / "chroma"
 METADATA_DIR = DATA_DIR / "metadata"
+QUERY_HISTORY_PATH = DATA_DIR / "history" / "query_history.json"
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 API_KEY = os.getenv("API_KEY", "")
 MODEL_NAME = "all-MiniLM-L6-v2"

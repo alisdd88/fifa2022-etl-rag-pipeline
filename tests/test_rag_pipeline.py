@@ -118,11 +118,17 @@ class RagPipelineTests(unittest.TestCase):
                 "generate_response",
                 return_value="Argentina won [Source 1].",
             ) as generate,
+            patch.object(pipeline, "save_query_history") as save_history,
         ):
             result = pipeline.answer_query("Who won?", top_k=2)
 
         prepare_context.assert_called_once_with("Who won?", top_k=2)
         generate.assert_called_once_with("Retrieved evidence and user question")
+        save_history.assert_called_once_with(
+            query="Who won?",
+            answer="Argentina won [Source 1].",
+            sources=retrieved_chunks,
+        )
         self.assertEqual(
             result,
             {
@@ -130,6 +136,31 @@ class RagPipelineTests(unittest.TestCase):
                 "retrieved_chunks": retrieved_chunks,
             },
         )
+
+    def test_answer_query_does_not_save_failed_generation(self) -> None:
+        """History remains unchanged when local generation fails."""
+        prepared_context = {
+            "prompt": "Retrieved evidence and user question",
+            "retrieved_chunks": [],
+        }
+
+        with (
+            patch.object(
+                pipeline,
+                "prepare_rag_context",
+                return_value=prepared_context,
+            ),
+            patch.object(
+                pipeline,
+                "generate_response",
+                side_effect=ConnectionError("Ollama unavailable"),
+            ),
+            patch.object(pipeline, "save_query_history") as save_history,
+            self.assertRaisesRegex(ConnectionError, "Ollama unavailable"),
+        ):
+            pipeline.answer_query("Who won?")
+
+        save_history.assert_not_called()
 
     def test_init_pipeline_connects_to_index_manager_and_returns_collection(
         self,
