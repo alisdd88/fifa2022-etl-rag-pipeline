@@ -1,4 +1,4 @@
-"""PostgreSQL schema for processed StatsBomb records."""
+"""PostgreSQL schema for processed structured and media records."""
 
 import psycopg
 
@@ -64,6 +64,17 @@ SCHEMA_STATEMENTS = (
     )
     """,
     """
+    CREATE TABLE IF NOT EXISTS metadata (
+        metadata_id TEXT PRIMARY KEY,
+        match_id TEXT NOT NULL,
+        source TEXT NOT NULL,
+        type TEXT NOT NULL,
+        file_path TEXT NOT NULL,
+        metadata_path TEXT NOT NULL,
+        FOREIGN KEY (match_id) REFERENCES matches (match_id)
+    )
+    """,
+    """
     CREATE TABLE IF NOT EXISTS lineups (
         match_id TEXT NOT NULL,
         statsbomb_match_id BIGINT NOT NULL,
@@ -108,6 +119,6 @@ SCHEMA_STATEMENTS = (
 
 
 def create_schema(connection: psycopg.Connection) -> None:
-    """Create the approved structured-data tables when they do not exist."""
+    """Create the approved database tables when they do not exist."""
     for statement in SCHEMA_STATEMENTS:
         connection.execute(statement)

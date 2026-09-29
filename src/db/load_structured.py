@@ -259,7 +259,9 @@ def load_structured_data() -> dict[str, int]:
     """Replace database rows with the processed CSV snapshot and validate it."""
     with connect_database() as connection:
         create_schema(connection)
-        connection.execute("TRUNCATE TABLE events, lineups, matches, competition")
+        connection.execute(
+            "TRUNCATE TABLE metadata, events, lineups, matches, competition"
+        )
         for table_name, file_name, database_columns, _ in TABLE_LOADS:
             _copy_csv(connection, table_name, file_name, database_columns)
         return validate_structured_load(connection)
